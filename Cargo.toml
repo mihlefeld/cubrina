@@ -4,4 +4,6 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+chrono = "0.4.38"
 yew = {version = "0.21", features = ["csr"]}
+yew-hooks = "0.3.2"
