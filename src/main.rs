@@ -1,50 +1,42 @@
 use yew::prelude::*;
 use yew_hooks::prelude::*;
+mod timer;
+use timer::DisplayTime; 
+use timer::TimerHistory;
+use timer::Timer;
 
 #[function_component]
 fn App() -> Html {
-    let running = use_state(|| false);
-    let t0 = use_state(|| chrono::Local::now().timestamp_millis());
-    let time = use_state(|| 0.0f32);
+    let history = use_mut_ref(|| TimerHistory::new());
+    let last_time = use_state(|| DisplayTime::new());
 
-    use_interval(
+    // use_interval(
+    //     {
+    //     },
+    //     10,
+    // );
+    let new_time_callback = Callback::<DisplayTime>::from(
         {
-            let t0 = t0.clone();
-            let time = time.clone();
-            let running = running.clone();
-            move || {
-                if *running {
-                    let duration = chrono::Local::now().timestamp_millis() - *t0;
-                    let df32 = (duration as f32) / 1000f32;
-                    time.set(df32);
-                }
-            }
-        },
-        10,
-    );
-
-    let start = {
-        let running = running.clone();
-        let t0 = t0.clone();
-        let time = time.clone();
-        move |_| {
-            if *running {
-                running.set(false);
-                let duration = chrono::Local::now().timestamp_millis() - *t0;
-                let df32 = (duration as f32) / 1000f32;
-                time.set(df32);
-            } else {
-                t0.set(chrono::Local::now().timestamp_millis());
-                running.set(true);
+            let history = history.clone();
+            let last_time = last_time.clone();
+            move |time| {
+                last_time.set(time);
+                history.borrow_mut().push(time);
             }
         }
-    };
+    );
+
 
     html! {
         <div>
-            <button onclick={start}>{"Start"}</button>
             <p>{ "Hello world" }</p>
-            <p>{ *time }</p>
+            <Timer finished={new_time_callback}></Timer>
+            <p>{last_time.display()}</p>
+            <ul>
+                {
+                    history.borrow().time_list.iter().map(|time| html! { <li>{ time.display() }</li> }).collect::<Html>()
+                }
+            </ul>
         </div>
     }
 }
